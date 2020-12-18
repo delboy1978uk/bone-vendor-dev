@@ -10,6 +10,9 @@ use Symfony\Component\Process\Process;
 
 class VendorDevCommand extends Command
 {
+    /** @var array  */
+    private $results = [];
+
     public function configure()
     {
         parent::configure();
@@ -27,16 +30,28 @@ class VendorDevCommand extends Command
     {
         $vendor = $input->getArgument('vendor');
         if (file_exists('vendor/' . $vendor)) {
-            $output->writeln('Entering vendor/' . $vendor .' directory.');
+            $output->writeln('Entering <comment>vendor/' . $vendor .'</comment>.');
             $folders = glob('vendor/' . $vendor . '/*');
             $output->writeln('Found ' . count($folders) .' projects.');
             $output->writeln('');
 
             foreach ($folders as $folder) {
-                $output->writeln('Checking ' .  $folder . ' directory');
+                $folder = str_replace('vendor/', '', $folder);
+                $output->writeln('Checking <info>' .  $folder . '</info>');
                 $this->checkFolder($folder, $vendor, $output);
-                $output->writeln('');
             }
+
+            if (count($this->results)) {
+                $output->writeln('');
+                $output->writeln('The following packages have been changed:');
+                $output->writeln('');
+
+                foreach ($this->results as $result) {
+                    $output->writeln("<comment>$result</comment>");
+                }
+            }
+
+
 
         } else {
             $output->writeln('No vendor called ' . $vendor .' exists');
@@ -52,16 +67,30 @@ class VendorDevCommand extends Command
      */
     private function checkFolder(string $folder, string $vendor, OutputInterface $output): void
     {
-        if (file_exists($folder . '/.git')) {
-            $output->writeln('Git folder found.');
-        } else {
+        $folder = str_replace( $vendor . '/', '', $folder);
+        chdir('vendor/' . $vendor);
+
+        if (!file_exists($folder . '/.git')) {
             $output->writeln('No Git folder found. Cloning into temporary folder');
-            $process = new Process(['cd', 'vendor/' . $vendor]);
+            $process = Process::fromShellCommandline("git clone https://github.com/$vendor/$folder xxx");
             $process->run();
-            $output->writeln($process);
-            $process = new Process(['ls', '-la']);
+            $output->writeln('cloning complete, moving .git folder in place');
+            $process = Process::fromShellCommandline("mv xxx/.git $folder");
             $process->run();
-            $output->writeln('here we are');
+            $output->writeln('removing temp folder');
+            $process = Process::fromShellCommandline("rm -fr  xxx");
+            $process->run();
         }
+
+        chdir($folder);
+        $process = Process::fromShellCommandline("git status");
+        $process->run();
+        $result = $process->getOutput();
+
+        if (!strstr($result, 'nothing to commit, working tree clean')) {
+            $this->results[] = $vendor . '/' . $folder;
+        }
+
+        chdir('..');
     }
 }
