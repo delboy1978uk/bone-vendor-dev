@@ -34,6 +34,7 @@ class VendorDevCommand extends Command
             $folders = glob('vendor/' . $vendor . '/*');
             $output->writeln('Found ' . count($folders) .' projects.');
             $output->writeln('');
+            chdir("vendor/$vendor");
 
             foreach ($folders as $folder) {
                 $folder = str_replace('vendor/', '', $folder);
@@ -68,7 +69,6 @@ class VendorDevCommand extends Command
     private function checkFolder(string $folder, string $vendor, OutputInterface $output): void
     {
         $folder = str_replace( $vendor . '/', '', $folder);
-        chdir('vendor/' . $vendor);
 
         if (!file_exists($folder . '/.git')) {
             $output->writeln('No Git folder found. Cloning into temporary folder');
@@ -78,7 +78,7 @@ class VendorDevCommand extends Command
             $process = Process::fromShellCommandline("mv xxx/.git $folder");
             $process->run();
             $output->writeln('removing temp folder');
-            $process = Process::fromShellCommandline("rm -fr  xxx");
+            $process = Process::fromShellCommandline("rm -fr xxx");
             $process->run();
         }
 

@@ -3,8 +3,7 @@
 
 $path = file_exists('vendor/autoload.php') ? 'vendor/autoload.php' : '../../../autoload.php';
 require_once($path);
-
-$app = new \Bone\Console\ConsoleApplication('vendor-tool');
-$app->addCommands([new \Bone\VendorDev\Command\VendorDevCommand()]);
+$app = new \Symfony\Component\Console\Application('vendor-tool');
+$app->addCommands([new \Bone\VendorDev\Command\VendorDevCommand('check')]);
 $app->run();
 
