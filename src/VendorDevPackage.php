@@ -24,6 +24,6 @@ class VendorDevPackage implements RegistrationInterface, CommandRegistrationInte
      */
     public function registerConsoleCommands(Container $container): array
     {
-        return [new VendorDevCommand('vendor:check')];
+        return [ new VendorDevCommand('vendor:check') ];
     }
 }

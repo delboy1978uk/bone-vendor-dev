@@ -29,30 +29,31 @@ class VendorDevCommand extends Command
     public function execute(InputInterface $input, OutputInterface $output)
     {
         $vendor = $input->getArgument('vendor');
-        if (file_exists('vendor/' . $vendor)) {
+
+        if (\file_exists('vendor/' . $vendor)) {
             $output->writeln('Entering <comment>vendor/' . $vendor .'</comment>.');
-            $folders = glob('vendor/' . $vendor . '/*');
+            $folders = \glob('vendor/' . $vendor . '/*');
             $output->writeln('Found ' . count($folders) .' projects.');
             $output->writeln('');
-            chdir("vendor/$vendor");
+            \chdir("vendor/$vendor");
 
             foreach ($folders as $folder) {
-                $folder = str_replace('vendor/', '', $folder);
+                $folder = \str_replace('vendor/', '', $folder);
                 $output->writeln('Checking <info>' .  $folder . '</info>');
                 $this->checkFolder($folder, $vendor, $output);
             }
 
-            if (count($this->results)) {
+            if (\count($this->results)) {
                 $output->writeln('');
                 $output->writeln('The following packages have been changed:');
                 $output->writeln('');
 
                 foreach ($this->results as $result) {
-                    $output->writeln("<comment>$result</comment>");
+                    $output->writeln('<comment>' . $result . '</comment>');
                 }
             }
 
-
+            $output->writeln('');
 
         } else {
             $output->writeln('No vendor called ' . $vendor .' exists');
@@ -68,11 +69,11 @@ class VendorDevCommand extends Command
      */
     private function checkFolder(string $folder, string $vendor, OutputInterface $output): void
     {
-        $folder = str_replace( $vendor . '/', '', $folder);
+        $folder = \str_replace( $vendor . '/', '', $folder);
 
-        if (!file_exists($folder . '/.git')) {
+        if (!\file_exists($folder . '/.git')) {
             $output->writeln('No Git folder found. Cloning into temporary folder');
-            $process = Process::fromShellCommandline("git clone https://github.com/$vendor/$folder xxx");
+            $process = Process::fromShellCommandline("git clone ssh://git@github.com/$vendor/$folder xxx");
             $process->run();
             $output->writeln('cloning complete, moving .git folder in place');
             $process = Process::fromShellCommandline("mv xxx/.git $folder");
@@ -82,15 +83,15 @@ class VendorDevCommand extends Command
             $process->run();
         }
 
-        chdir($folder);
+        \chdir($folder);
         $process = Process::fromShellCommandline("git status");
         $process->run();
         $result = $process->getOutput();
 
-        if (!strstr($result, 'nothing to commit, working tree clean')) {
+        if (!\strstr($result, 'nothing to commit, working tree clean')) {
             $this->results[] = $vendor . '/' . $folder;
         }
 
-        chdir('..');
+        \chdir('..');
     }
 }
