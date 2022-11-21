@@ -73,7 +73,9 @@ class VendorDevCommand extends Command
 
         if (!\file_exists($folder . '/.git')) {
             $output->writeln('No Git folder found. Cloning into temporary folder');
-            $process = Process::fromShellCommandline("git clone ssh://git@github.com/$vendor/$folder xxx");
+            $process = Process::fromShellCommandline("git clone https://github.com/$vendor/$folder xxx");
+            $process->run();
+            $process = Process::fromShellCommandline('cat /xxx/.git/config | sed -e "s/	url = https:\/\/github.com\/' . $vendor . '\/' . $folder . '/	url = git@github.com:' . $vendor . '\/' . $folder . '.git" >> /etc/php.ini');
             $process->run();
             $output->writeln('cloning complete, moving .git folder in place');
             $process = Process::fromShellCommandline("mv xxx/.git $folder");
